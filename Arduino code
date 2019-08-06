@@ -1,0 +1,283 @@
+#include "PinChangeInterrupt.h"
+
+#define pinA A1
+#define pinB A2
+#define pinC A3
+#define pinD A4
+#define pinE A5
+
+int stevec = 0;
+int mSec=20;
+int stevec1 = 0;
+int maw = 0;
+unsigned int time1, time2;
+
+void setup()
+{
+  Serial.begin(115200);
+
+  pinMode(pinA, INPUT_PULLUP);
+  pinMode(pinB, INPUT_PULLUP);
+  pinMode(pinC, INPUT_PULLUP);
+  pinMode(pinD, INPUT_PULLUP);
+  pinMode(pinE, INPUT_PULLUP);
+
+  DDRD = DDRD | 0b11110000;
+  DDRB = DDRB | 0b00111111;
+}
+
+void loop()
+{
+  enc = map(analogRead(A0), 203, 1028, 0, 360);
+  Serial.print(enc);
+  Serial.println("@");
+  if(stevec == 2)
+  {
+    enc = map(analogRead(A0), 203, 1028, 0, 360);
+    encoder();
+  }
+}
+
+void serialEvent()
+{
+  char a = Serial.read();
+  if (a == 'a' && stevec == 0)
+  {
+    stevec = 1;
+    Serial.print(stevec);
+    Serial.println("@");
+    prekinitev2();
+    enc = map(analogRead(A0), 203, 1028, 0, 360);
+    encoder();
+  }
+
+  if (a == 'b' && stevec > 0)
+  {
+    char a = Serial.read();
+    prekinitev1();
+    PORTD = B00000000;
+    PORTB = B00000000;
+    stevec = 0;
+    Serial.print(stevec);
+    Serial.println("@");
+  }
+
+  if (a == 'c' && stevec > 0)
+  {
+    int branje = Serial.parseInt();
+    if (branje != 0)
+    {
+      mSec = branje;
+    }
+  }
+  if (a == 'd' && stevec == 0)
+  {
+    prekinitev1();
+    stevec = 2;
+  }
+  if (stevec == 1)
+  {
+    enc = map(analogRead(A0), 203, 1028, 0, 360);
+    Serial.print(enc);
+    Serial.println("@");
+  }
+}
+
+void encA(void)
+{
+  prekinitev1();
+  PORTD = B00000000;
+  PORTB = B00000000;
+  if (stevec == 1)
+  {
+    delay(mSec);
+    enc = map(analogRead(A0), 203, 1028, 0, 360);
+    if (enc < 184 && enc > 112)
+    {
+      PORTD = B11110000;
+      PORTB = B00000011;
+    }
+
+    else
+    {
+      PORTD = B11110000;
+      PORTB = B00000000;
+    }
+  }
+  prekinitev2();
+}
+
+void encB(void)
+{
+  prekinitev1();
+  PORTD = B00000000;
+  PORTB = B00000000;
+  if (stevec == 1)
+  {
+    delay(mSec);
+    enc = map(analogRead(A0), 203, 1028, 0, 360);
+    if (enc < 112 && enc > 40)
+    {
+      PORTD = B11000000;
+      PORTB = B00001111;
+    }
+
+    else
+    {
+      PORTD = B11000000;
+      PORTB = B00000011;
+    }
+  }
+  prekinitev2();
+}
+
+void encC(void)
+{
+  prekinitev1();
+  PORTD = B00000000;
+  PORTB = B00000000;
+  if (stevec == 1)
+  {
+    delay(mSec);
+    enc = map(analogRead(A0), 203, 1028, 0, 360);
+    if (enc < 40 || enc > 328)
+    {
+      PORTD = B00000000;
+      PORTB = B00111111;
+    }
+
+    else
+    {
+      PORTD = B00000000;
+      PORTB = B00001111;
+    }
+  }
+  prekinitev2();
+}
+
+void encD(void)
+{
+  prekinitev1();
+  PORTD = B00000000;
+  PORTB = B00000000;
+  if (stevec == 1)
+  {
+    delay(mSec);
+    enc = map(analogRead(A0), 203, 1028, 0, 360);
+    if (enc < 328 && enc > 256)
+    {
+      PORTD = B00110000;
+      PORTB = B00111100;
+    }
+
+    else
+    {
+      PORTD = B00000000;
+      PORTB = B00111100;
+    }
+  }
+  prekinitev2();
+}
+
+void encE(void)
+{
+  prekinitev1();
+  PORTD = B00000000;
+  PORTB = B00000000;
+  if (stevec == 1)
+  {
+    delay(mSec);
+    enc = map(analogRead(A0), 203, 1028, 0, 360);
+    if (enc < 256 && enc > 184)
+    {
+      PORTD = B11110000;
+      PORTB = B00110000;
+    }
+
+    else
+    {
+      PORTD = B00110000;
+      PORTB = B00110000;
+    }
+  }
+  prekinitev2();
+}
+
+void prekinitev1()
+{
+  disablePinChangeInterrupt(pinA);
+  disablePinChangeInterrupt(pinB);
+  disablePinChangeInterrupt(pinC);
+  disablePinChangeInterrupt(pinD);
+  disablePinChangeInterrupt(pinE);
+}
+
+void prekinitev2()
+{
+  attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(pinA), encA, RISING);
+  attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(pinB), encB, RISING);
+  attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(pinC), encC, RISING);
+  attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(pinD), encD, RISING);
+  attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(pinE), encE, RISING);
+}
+
+void encoder()
+{
+  if (enc > 154 && enc < 226)
+  {
+    PORTD = B11110000;
+    PORTB = B00000000;
+    if (enc < 184 && enc > 112)
+    {
+      PORTD = B11110000;
+      PORTB = B00000011;
+    }
+    delay(mSec);
+  }
+  if (enc > 226 && enc < 298)
+  {
+    PORTD = B00110000;
+    PORTB = B00110000;
+    if (enc < 256 && enc > 184)
+    {
+      PORTD = B11110000;
+      PORTB = B00110000;
+    }
+    delay(mSec);
+  }
+  if (enc > 298 || enc < 10)
+  {
+    PORTD = B00000000;
+    PORTB = B00111100;
+    if (enc < 328 && enc > 256)
+    {
+      PORTD = B00110000;
+      PORTB = B00111100;
+    }
+    delay(mSec);
+  }
+  if (enc > 10 && enc < 82)
+  {
+    PORTD = B00000000;
+    PORTB = B00001111;
+    if (enc < 40 || enc > 328)
+    {
+      PORTD = B00000000;
+      PORTB = B00111111;
+    }
+
+    delay(mSec);
+  }
+  if (enc > 82 && enc < 154)
+  {
+    PORTD = B11000000;
+    PORTB = B00000011;
+    if (enc < 112 && enc > 40)
+    {
+      PORTD = B11000000;
+      PORTB = B00001111;
+    }
+    delay(mSec);
+  }
+}
+
